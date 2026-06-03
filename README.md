@@ -104,8 +104,45 @@ aiops-assistant/
 ## Adding More Runbooks
 
 1. Add your `.txt` or `.pdf` files to `data/runbooks/`
-2. Re-run `python ingest.py` to update the vector store
+2. Rebuild the vector store (see **Updating the Vector Store (ChromaDB)** below)
 3. Restart the Streamlit app
+
+---
+
+## Updating the Vector Store (ChromaDB)
+
+The vector store in `chroma_db/` is built by `ingest.py` from the files in
+`data/runbooks/`. Whenever you **add, edit, or remove** a runbook, you must
+rebuild it so the app sees the change.
+
+> **Important:** Running `python ingest.py` *adds* documents to the existing
+> collection — it does not replace them. Re-running it without clearing first
+> will **duplicate** every runbook already in the store. Always delete
+> `chroma_db/` before a rebuild.
+
+### Rebuild the database (Windows / PowerShell)
+```powershell
+Remove-Item -Recurse -Force .\chroma_db
+python ingest.py
+```
+
+### Rebuild the database (macOS / Linux)
+```bash
+rm -rf ./chroma_db
+python ingest.py
+```
+
+A successful rebuild prints `Loaded N document(s)` and `SUCCESS: N chunks
+stored in ChromaDB`. Confirm `N` matches the number of runbooks you expect.
+
+### When you must rebuild
+- You added, edited, or deleted a runbook in `data/runbooks/`
+- You changed `EMBEDDING_MODEL` in `rag_chain.py` (old/new embeddings are
+  incompatible — a stale `chroma_db/` will cause wrong answers or a dimension error)
+- The app reports `Knowledge base not found`
+
+After rebuilding, **restart Streamlit** (Ctrl+C, then `streamlit run app.py`) so
+it reloads the cached chain.
 
 ---
 

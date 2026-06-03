@@ -1,0 +1,64 @@
+RUNBOOK: Service Health Check Failing
+Category: Application / Reliability
+Severity: P1 - Critical (if user-facing) / P2 - High
+Last Updated: 2024-01-01
+
+DESCRIPTION
+A service's health check endpoint (e.g. /health, /healthz, /readyz) is
+returning a non-200 status or timing out. Load balancers and orchestrators
+will mark the instance unhealthy and stop routing traffic to it, which can
+reduce capacity or cause a full outage if all replicas fail.
+
+DETECTION
+Alert triggers when: health endpoint returns non-2xx or no response.
+Monitoring: Load balancer target health, Kubernetes readiness/liveness probes,
+Datadog / Prometheus uptime checks, PagerDuty synthetic monitors.
+
+IMMEDIATE STEPS
+1. Confirm the failure from outside the host:
+   curl -i https://<service-host>/health
+   curl -i http://<pod-ip>:<port>/healthz
+
+2. Check whether one instance or all instances are failing:
+   kubectl get pods -l app=<service> -o wide
+   (AWS) Check target group health in the EC2/ELB console
+
+3. If running in Kubernetes, inspect the failing pod:
+   kubectl describe pod <pod-name>
+   kubectl logs <pod-name> --tail=100
+
+4. Check recent restarts / crash loops:
+   kubectl get pods -l app=<service>   # look at RESTARTS column
+
+5. Verify the service's dependencies are reachable (DB, cache, downstream APIs):
+   - Health checks often fail because a dependency is down, not the app itself
+   - Check connection pool / DB runbook if the DB is implicated
+
+6. If a single bad instance: cordon/restart it to restore capacity:
+   kubectl delete pod <pod-name>        # lets the Deployment recreate it
+   (AWS) Deregister/terminate the unhealthy instance so the ASG replaces it
+
+INVESTIGATION
+- Review recent deployments (was code or config shipped in the last 2 hours?)
+- Check whether the health check itself is too strict (timeout too low,
+  checks a slow dependency, or probe interval misconfigured)
+- Look for OOMKills or high CPU on the host (see related runbooks)
+- Check certificate expiry if the endpoint is HTTPS and failing TLS
+
+PERMANENT FIX
+- Separate liveness (is the process up?) from readiness (can it serve traffic?)
+  so a slow dependency does not kill healthy pods
+- Add sensible probe timeouts and failureThreshold values
+- Make the health check lightweight - avoid heavy queries on every probe
+- Add autoscaling / surge capacity so losing one instance is not user-facing
+
+ESCALATION
+- If ALL replicas are unhealthy and traffic is impacted: declare an incident
+- If a dependency (DB, auth, payment) is the root cause: escalate to that team
+- Slack: #incident-response | PagerDuty: Application On-Call
+
+ROLLBACK
+- If failures started right after a deploy: roll back immediately
+- Kubernetes: kubectl rollout undo deployment/<name>
+- AWS ECS: update service to previous task definition revision
+- Revert the offending config change if a config push caused it
