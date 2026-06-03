@@ -7,7 +7,7 @@ retrieval-augmented generation (RAG) responses.
 import os
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 from langchain_classic.chains import RetrievalQA
 from langchain_core.prompts import PromptTemplate
 
@@ -63,7 +63,7 @@ def get_rag_chain():
     )
 
     llm = ChatGoogleGenerativeAI(
-        model="gemini-2.5-pro",
+        model="gemini-2.5-flash",
         google_api_key=api_key,
         temperature=0.3
     )

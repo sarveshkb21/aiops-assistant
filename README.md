@@ -9,7 +9,7 @@ remediation steps during incidents using LangChain, ChromaDB, Gemini, and Stream
 
 | Component       | Tool                        |
 |-----------------|-----------------------------|
-| LLM             | Google Gemini 2.5 Pro       |
+| LLM             | Google Gemini 2.5 Flash     |
 | Embeddings      | Google gemini-embedding-2   |
 | Framework       | LangChain 1.x               |
 | Vector Store    | ChromaDB (local)            |
@@ -76,6 +76,7 @@ aiops-assistant/
 ├── ingest.py                      # Document ingestion pipeline
 ├── rag_chain.py                   # RAG Q&A chain (LangChain + Gemini)
 ├── requirements.txt               # Python dependencies
+├── CLAUDE.md                      # Guidance for Claude Code sessions
 ├── .env.example                   # API key template
 ├── .env                           # Your actual API key (do not commit)
 ├── .gitignore
@@ -114,6 +115,9 @@ aiops-assistant/
 |---------|-------|-----|
 | `GOOGLE_API_KEY is not set` | No `.env` file or key missing | Copy `.env.example` to `.env` and paste your key |
 | `404 NOT_FOUND ... is not found for API version` | The Gemini model name was retired | Update the model name in `rag_chain.py` (see the model note above) |
+| `429 RESOURCE_EXHAUSTED ... limit: 0` | Model is paid-tier only (e.g. `gemini-2.5-pro`) | Switch to a free-tier model like `gemini-2.5-flash`, or enable billing |
+| `429 RESOURCE_EXHAUSTED ... retry in Ns` | Free-tier rate/daily limit hit | Wait for the retry delay; limits reset over time |
+| Model change in `rag_chain.py` has no effect in the running app | Streamlit cached the old chain | Restart the app (Ctrl+C, re-run) or use ⋮ menu → Clear cache |
 | `ModuleNotFoundError: No module named 'langchain...'` | Dependencies out of date | Re-run `pip install -r requirements.txt` |
 | Answers seem unrelated to your runbooks, or a dimension error on query | Vector store was built with a different embedding model | Delete the `chroma_db/` folder and re-run `python ingest.py` |
 | `Knowledge base not found` in the app | `ingest.py` was never run | Run `python ingest.py` before launching the app |

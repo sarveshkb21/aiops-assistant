@@ -5,6 +5,14 @@ Run with: streamlit run app.py
 """
 
 import os
+import warnings
+
+# Silence non-actionable DeprecationWarnings from third-party internals
+# (google-genai and chromadb warn about future Python versions, not our code).
+# Must run before importing rag_chain, which triggers those imports.
+warnings.filterwarnings("ignore", category=DeprecationWarning, module=r"google\.genai.*")
+warnings.filterwarnings("ignore", category=DeprecationWarning, module=r"chromadb.*")
+
 import streamlit as st
 from rag_chain import get_rag_chain
 
