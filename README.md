@@ -22,7 +22,7 @@ specialist that retrieves only from that domain's runbooks.
 > **Note on model names:** Google periodically retires Gemini models. If you hit a
 > `404 NOT_FOUND` for a model, list the currently available ones and update
 > `EMBEDDING_MODEL` in `rag_chain.py` (embeddings) or the `model=` in
-> `get_rag_chain()` (LLM). The embedding model **must** be identical in ingest and
+> `get_agent_chain()` (LLM). The embedding model **must** be identical in ingest and
 > query — it is defined once as `EMBEDDING_MODEL` in `rag_chain.py` and imported by
 > `ingest.py` to keep them in sync.
 
@@ -99,8 +99,9 @@ pip install -r requirements.txt
 - Get your Gemini API key from: https://aistudio.google.com/app/apikey
 
 ### Step 5: Add your runbooks
-- Place your `.txt` or `.pdf` runbook files in `data/runbooks/`
-- Sample runbooks are already included to get you started
+- Place your `.txt` or `.pdf` runbook files under `data/runbooks/<domain>/`
+  (one subfolder per domain — the subfolder name becomes the routing domain)
+- Sample runbooks across all domains are already included to get you started
 
 ### Step 6: Ingest documents into vector store
 ```
@@ -116,6 +117,30 @@ The app will open at: http://localhost:8501
 
 ---
 
+## Deploying to Streamlit Cloud
+
+1. Push this project to a GitHub repo (with `app.py` at the repo root).
+2. On [share.streamlit.io](https://share.streamlit.io), create an app pointing at
+   `app.py`.
+3. Add your key under **Settings → Secrets** (Streamlit exposes secrets as
+   environment variables, so `os.getenv("GOOGLE_API_KEY")` works):
+   ```toml
+   GOOGLE_API_KEY = "your_key_here"
+   ```
+4. **Ship the vector store.** `chroma_db/` is gitignored, so a fresh deploy has no
+   knowledge base and every query fails with *"Knowledge base not found."* For a
+   demo, the simplest fix is to commit the prebuilt store: remove `chroma_db/`
+   from `.gitignore`, run `python ingest.py` locally, then commit `chroma_db/`.
+   (Alternative: run ingestion on the server at startup — but that needs the API
+   key at runtime and spends embedding quota on every cold start.)
+
+> **Note:** `requirements.txt` pins `protobuf` and the `opentelemetry-*` packages.
+> Do not remove these — ChromaDB imports opentelemetry (which uses protobuf) at
+> import time, and an unpinned resolve on Streamlit Cloud picks an incompatible
+> `opentelemetry-proto`, crashing with *"Descriptors cannot be created directly"*.
+
+---
+
 ## Project Structure
 
 ```
@@ -123,7 +148,7 @@ aiops-assistant/
 ├── app.py                         # Streamlit UI (router -> agent -> badge)
 ├── agents.py                      # Agent registry: ROUTER + 6 named specialists
 ├── router.py                      # Classifies a query into a domain (Gemini)
-├── rag_chain.py                   # RAG chains: get_rag_chain / get_agent_chain
+├── rag_chain.py                   # RAG chain builder: get_agent_chain (domain-filtered)
 ├── ingest.py                      # Document ingestion pipeline (tags `domain`)
 ├── requirements.txt               # Python dependencies
 ├── LICENSE                        # MIT license

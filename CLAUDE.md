@@ -19,11 +19,10 @@ questions from local runbooks. Stack: **Streamlit** UI → **LangChain 1.x** →
   query into a domain (`kubernetes`, `database`, `infrastructure`, `network`,
   `security`, `general`). Owns the `DOMAINS` list. Robust parsing falls back to
   `general`.
-- `rag_chain.py` — builds RetrievalQA chains (Chroma retriever + Gemini LLM). Owns
-  shared constants `CHROMA_DIR` and `EMBEDDING_MODEL`. Two builders:
-  `get_rag_chain()` (unfiltered, kept for compatibility) and
-  `get_agent_chain(domain)` (filters the retriever by `domain` metadata; `general`
-  = no filter).
+- `rag_chain.py` — builds the RetrievalQA chain (Chroma retriever + Gemini LLM).
+  Owns shared constants `CHROMA_DIR` and `EMBEDDING_MODEL`. The builder
+  `get_agent_chain(domain)` filters the retriever by `domain` metadata
+  (`general` = no filter / searches everything).
 - `agents.py` — multi-agent registry (pure LangChain, no CrewAI): an `Agent`
   dataclass (name/domain/role/goal/emoji/colour + `.run()`), the `AGENTS` dict of
   5 specialists + `general`, and a `ROUTER` that wraps `classify_query`. Chains are

@@ -144,7 +144,10 @@ if user_input:
 
         except Exception as e:
             err = str(e)
-            if "chroma" in err.lower() or "collection" in err.lower():
+            el = err.lower()
+            if "chroma" in el or "collection" in el:
                 st.error("Knowledge base not found. Please run `python ingest.py` first.")
+            elif "429" in err or "resource_exhausted" in el or "quota" in el:
+                st.warning("⏳ Gemini rate limit reached (free tier). Wait a minute and try again.")
             else:
                 st.error(f"Error: {err}")
