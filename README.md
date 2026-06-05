@@ -126,6 +126,7 @@ aiops-assistant/
 ├── rag_chain.py                   # RAG chains: get_rag_chain / get_agent_chain
 ├── ingest.py                      # Document ingestion pipeline (tags `domain`)
 ├── requirements.txt               # Python dependencies
+├── LICENSE                        # MIT license
 ├── CLAUDE.md                      # Guidance for Claude Code sessions
 ├── .env.example                   # API key template
 ├── .env                           # Your actual API key (do not commit)
@@ -225,6 +226,12 @@ it reloads the cached chain.
 
 > **Important:** Whenever you change `EMBEDDING_MODEL`, you must delete `chroma_db/`
 > and re-ingest. Embeddings from different models are not compatible.
+
+---
+
+## License
+
+Released under the [MIT License](LICENSE) — free to use, modify, and distribute.
 
 ---
 
