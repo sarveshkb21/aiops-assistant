@@ -4,7 +4,6 @@ Streamlit chat interface powered by RAG (LangChain + Gemini + ChromaDB).
 Run with: streamlit run app.py
 """
 
-import os
 import warnings
 
 # Silence non-actionable DeprecationWarnings from third-party internals
@@ -128,8 +127,10 @@ if user_input:
 
             # Append source documents
             if sources:
+                # Normalise separators so a store built on Windows (\) still shows
+                # clean filenames when served on Linux (Streamlit Cloud).
                 source_names = sorted(set(
-                    os.path.basename(doc.metadata.get("source", "Unknown"))
+                    doc.metadata.get("source", "Unknown").replace("\\", "/").rsplit("/", 1)[-1]
                     for doc in sources
                 ))
                 response += f"\n\n---\n*Sources: {', '.join(source_names)}*"
